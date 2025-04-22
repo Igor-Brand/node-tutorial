@@ -1,5 +1,7 @@
 # node-tutorial
 Repositório para armazenar um tutorial de node.js
+
+# Aula 1
 ## 1. **The Global Object**
 
 No **Node.js**, o objeto global é chamado `global` (parecido com o `window` no navegador). Ele contém variáveis e funções acessíveis de qualquer lugar.
@@ -115,6 +117,7 @@ console.log(math.sub(10, 5)); // 5
 |`path`|Manipula caminhos de arquivos|`path.join(__dirname, 'file.txt')`|
 |Custom modules|Você cria e importa seus próprios módulos|`require('./math')`|
 
+# Aula 2
 ### ✅ **1. Como ler um arquivo com Node.js**
 
 No seu `server.js`:
@@ -338,3 +341,216 @@ fs.mkdir('./new', (err) => {
 `fs.rmdir('./new', (err) => {     if (err) throw err;     console.log("Diretório removido"); });`
 
 👉 Remove um diretório, desde que esteja vazio.
+
+# Aula 3
+### ✅ **1. O que é o NPM?**
+
+**NPM (Node Package Manager)** é o gerenciador de pacotes do Node.js. Ele te permite:
+
+- Instalar bibliotecas prontas de terceiros (ex: `express`, `lodash`, etc)
+    
+- Gerenciar dependências de um projeto
+    
+- Rodar scripts úteis (como `npm start`, `npm test`, etc)
+
+### ✅ **2. Objetivo do tutorial (Goals for tutorial)**
+
+- Aprender a usar NPM no seu projeto Node.js
+    
+- Instalar e remover pacotes
+    
+- Entender o `package.json`
+    
+- Criar scripts e diferenciar dependências de produção e de desenvolvimento
+    
+
+---
+
+### ✅ **3. Como encontrar a documentação do NPM**
+
+- Site oficial: [https://docs.npmjs.com](https://docs.npmjs.com)
+    
+- Para qualquer comando, use:
+
+
+`npm help <comando> # Exemplo: npm help install`
+
+---
+
+### ✅ **4. Como instalar um pacote NPM globalmente**
+
+Global = disponível **em todo o sistema**, não só no seu projeto.
+
+`npm install -g nodemon`
+
+👉 Agora você pode rodar `nodemon` de qualquer lugar no terminal.
+
+---
+
+### ✅ **5. `npm init`**
+
+Cria o arquivo `package.json`, que registra informações do seu projeto.
+
+`npm init # ou mais rápido: npm init -y`
+
+---
+
+### ✅ **6. `package.json`**
+
+É o **coração do projeto** Node. Armazena:
+
+- Nome, versão, autor, etc
+    
+- Dependências (`dependencies`)
+    
+- Scripts (`scripts`)
+    
+- DevDependencies (`devDependencies`)
+    
+
+Exemplo:
+
+```json
+
+{
+  "name": "meu-projeto",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  }
+}
+
+```
+
+---
+
+### ✅ **7. Como instalar uma dependência de produção**
+
+`npm install express`
+
+👉 Vai aparecer dentro de `"dependencies"` no `package.json`.
+
+---
+
+### ✅ **8. Node Modules**
+
+Depois de instalar um pacote, ele vai pra **`node_modules/`**, que é onde ficam os arquivos de todas as dependências.
+
+⚠️ **Não edite nada manualmente dentro da pasta `node_modules`.**
+
+---
+
+### ✅ **9. Como usar um pacote no seu app**
+
+Depois de instalar, você pode importar assim:
+
+`const express = require('express');`
+
+Ou, se for módulo ES:
+
+`import express from 'express';`
+
+---
+
+### ✅ **10. Como instalar uma dependência de desenvolvimento**
+
+`npm install -D nodemon # ou npm install --save-dev nodemon`
+
+👉 Aparece na chave `"devDependencies"`.
+
+---
+
+### ✅ **11. Scripts do NPM**
+
+Dentro do `package.json`, você pode criar **atalhos** para comandos:
+
+
+```json
+"scripts": {
+  "start": "node index.js",
+  "dev": "nodemon index.js"
+}
+
+```
+
+E rodar com:
+
+`npm run dev`
+
+---
+
+### ✅ **12. Adicionar outra dependência de produção**
+
+Simplesmente:
+
+`npm install axios`
+
+👉 Agora `axios` aparece nas `"dependencies"`.
+
+---
+
+### ✅ **13. Importar um pacote com um alias**
+
+Você pode usar alias manualmente:
+
+`const http = require('axios'); // embora axios seja nome da lib, o alias aqui é "http"`
+
+Mas em geral, isso é feito com variáveis. O nome usado após `require()` ou `import` é seu alias.
+
+---
+
+### ✅ **14. Buscar pacotes no NPM**
+
+Use o site: 🔎 [https://www.npmjs.com](https://www.npmjs.com)
+
+Ou no terminal:
+
+`npm search <nome>`
+
+---
+
+### ✅ **15. Versionamento Semântico (Semantic Versioning)**
+
+No `package.json`, as versões seguem a estrutura:
+
+`"express": "^4.18.2"`
+
+📌 `MAJOR.MINOR.PATCH`
+
+- **MAJOR** (4): mudanças quebram compatibilidade
+    
+- **MINOR** (18): novas funcionalidades sem quebrar
+    
+- **PATCH** (2): correções de bugs
+    
+
+Símbolos:
+
+- `^` → atualiza `MINOR` e `PATCH`
+    
+- `~` → atualiza apenas `PATCH`
+    
+
+---
+
+### ✅ **16. Como atualizar dependências**
+
+`npm update`
+
+Ou para um pacote específico:
+
+`npm install express@latest`
+
+---
+
+### ✅ **17. Como desinstalar um pacote**
+
+`npm uninstall axios`
+
+👉 Remove do `package.json` e da pasta `node_modules`.
