@@ -554,3 +554,131 @@ Ou para um pacote específico:
 `npm uninstall axios`
 
 👉 Remove do `package.json` e da pasta `node_modules`.
+
+# aula 04
+
+# 📘 Tutorial Completo: Criando um Módulo de Log Personalizado com Eventos em Node.js
+
+## 🎯 Objetivo
+
+Você vai aprender a:
+
+- Criar um sistema de log que grava mensagens com data e um ID único.
+    
+- Usar o módulo de eventos (`EventEmitter`) para emitir e reagir a eventos.
+    
+- Trabalhar com `fsPromises`, `async/await`, e pacotes NPM.
+
+## 📁 Estrutura do Projeto
+
+```lua
+project/
+│
+├── logEvents.js       ← Módulo que grava os logs
+├── index.js           ← Arquivo principal
+└── logs/              ← Pasta onde os logs serão salvos
+
+```
+
+## 1️⃣ Criando o Módulo de Log
+
+### 📄 Arquivo: `logEvents.js`
+
+```javascript
+// Importa a função format do pacote date-fns para formatar datas
+const { format } = require('date-fns');
+
+// Importa a função v4 e renomeia como 'uuid' para gerar IDs únicos
+const { v4: uuid } = require('uuid');
+
+// Importa o módulo de sistema de arquivos (fs) padrão do Node
+const fs = require('fs');
+const fsPromises = require('fs').promises; // Versão baseada em Promises
+
+// Importa o módulo path para trabalhar com caminhos de arquivos
+const path = require('path');
+
+```
+### 🧠 Função principal: `logEvents`
+
+```js
+const logEvents = async (message) => {
+```
+Declara uma função assíncrona que vai receber uma mensagem de log.
+
+```js
+  const dateTime = `${format(new Date(), 'yyyyMMdd\tHH:mm:ss')};
+```
+Formata a data atual no estilo: 20250415 14:55:20, usando \t para separar com tabulações.
+
+```js
+  const logItem = `${dateTime}\t${uuid()}\t${message}\n`;
+```
+Monta a string de log com data, ID único e a mensagem que foi passada.
+
+### 📦 Criação da pasta `logs/` e escrita do log
+```js
+  try {
+    if (!fs.existsSync(path.join(__dirname, 'logs'))) {
+      await fsPromises.mkdir(path.join(__dirname, 'logs'));
+    }
+
+```
+Verifica se a pasta `logs` existe. Se não existir, cria ela usando `fsPromises.mkdir`.
+
+```js
+    await fsPromises.appendFile(
+      path.join(__dirname, 'logs', 'eventLog.txt'),
+      logItem
+    );
+```
+Adiciona (ou cria) o arquivo `eventLog.txt` dentro da pasta `logs`, e grava a linha de log nele.
+```js
+  } catch (err) {
+    console.log(err);
+  }
+};
+```
+ Captura e exibe qualquer erro que possa ocorrer no processo de gravação.
+
+### Exportando o módulo
+```js
+module.exports = logEvents;
+```
+Torna a função `logEvents()` disponível para ser usada em outros arquivos.
+
+## 2️⃣ Criando e Usando um Emissor de Eventos
+
+### 📄 Arquivo: `index.js`
+
+```js
+const logEvents = require('./logEvents');
+```
+Importa a função de log criada anteriormente.
+
+```js
+const EventEmitter = require('events');
+```
+Importa o módulo events do Node.js, que permite criar e ouvir eventos.
+
+```js
+class MyEmitter extends EventEmitter {};
+```
+Cria uma classe MyEmitter que herda da classe EventEmitter.
+
+```js
+const myEmitter = new MyEmitter();
+```
+Cria uma instância do emissor de eventos. Agora podemos usar .on() e .emit().
+
+```js
+myEmitter.on('log', (msg) => logEvents(msg));
+```
+Define o que deve acontecer quando o evento 'log' for emitido: chamar logEvents(msg).
+
+```js
+setTimeout(() => {
+  myEmitter.emit('log', 'Log event emitted!');
+}, 2000);
+```
+Aguarda 2 segundos e emite o evento 'log', passando a mensagem "Log event emitted!".
