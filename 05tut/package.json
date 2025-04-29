@@ -1,7 +1,7 @@
 {
   "name": "05tut",
   "version": "1.0.0",
-  "description": "",
+  "description": "Node.js web server",
   "main": "server.js",
   "scripts": {
     "start": "node server",
