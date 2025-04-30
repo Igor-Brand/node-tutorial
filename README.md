@@ -1144,3 +1144,178 @@ app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 ### 6. Inicialização do Servidor
 - `app.listen(...)`: inicia o servidor e escuta na porta definida.
 
+# Aula 07
+
+# Middleware no Express.js
+
+Em **Express.js**, middleware é essencialmente qualquer coisa que se situa entre a **requisição (request)** e a **resposta (response)**. Handlers de rota, como os que definimos para lidar com requisições `GET` ou `POST`, são considerados middleware.
+
+Middleware pode ser de três tipos:
+
+- **Built-in (incorporado ao Express)**
+- **Customizado (criado por você)**
+- **De terceiros (pacotes instalados via npm)**
+
+Middleware é frequentemente aplicado a todas as rotas de entrada usando `app.use()`. O middleware funciona como uma **cascata (waterfall)**. Se você colocar `app.use()` acima das suas definições de rota, ele será aplicado a todas as requisições que chegam antes de serem processadas pelas rotas específicas.
+
+---
+
+## 1. Middleware Built-in (Incorporado)
+
+O Express.js vem com middleware built-in para tarefas comuns. Eles são adicionados usando `app.use()`.
+
+```js
+// Middleware para lidar com dados URL-encoded (dados de formulário)
+app.use(express.urlencoded({ extended: false }));
+
+// Middleware para lidar com dados JSON
+app.use(express.json());
+
+// Middleware para servir arquivos estáticos
+app.use(express.static(path.join(__dirname, '/public')));
+```
+
+### Explicação
+
+- `express.urlencoded({ extended: false })`: Lida com dados enviados em formulários HTML (`application/x-www-form-urlencoded`).
+- `express.json()`: Lida com dados JSON enviados no corpo da requisição.
+- `express.static(path)`: Serve arquivos estáticos como CSS, imagens, JavaScript, etc.
+
+Para usar o middleware estático, crie um diretório `public` e mova seus arquivos estáticos (como `css/`, `images/`, `data.txt`) para dentro dele.
+
+---
+
+## 2. Middleware Customizado
+
+Você pode criar seu próprio middleware para tarefas como logging ou validação.
+
+### Exemplo: Logger Customizado
+
+#### Arquivo: `middleware/logEvents.js`
+
+```js
+const { format } = require('date-fns');
+const { v4: uuid } = require('uuid');
+const fs = require('fs');
+const fsPromises = require('fs').promises;
+const path = require('path');
+
+const logEvents = async (message, logName) => {
+    const dateTime = `${format(new Date(), 'yyyyMMdd	HH:mm:ss')}`;
+    const logItem = `${dateTime}	${uuid()}	${message}
+`;
+    console.log(logItem);
+
+    try {
+        if (!fs.existsSync(path.join(__dirname, '..', 'logs'))) {
+            await fsPromises.mkdir(path.join(__dirname, '..', 'logs'));
+        }
+        await fsPromises.appendFile(path.join(__dirname, '..', 'logs', logName), logItem);
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+const logger = (req, res, next) => {
+    const message = `${req.method}	${req.headers.origin || 'undefined'}	${req.url}`;
+    logEvents(message, 'reqLog.txt');
+    console.log(`${req.method} ${req.path}`);
+    next();
+}
+
+module.exports = { logger, logEvents };
+```
+
+#### Uso no `server.js`
+
+```js
+const express = require('express');
+const app = express();
+const path = require('path');
+const { logger } = require('./middleware/logEvents');
+
+const PORT = process.env.PORT || 3500;
+
+app.use(logger);
+app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
+app.use(express.static(path.join(__dirname, '/public')));
+```
+
+---
+
+## 3. Middleware de Terceiros
+
+Pacotes npm que você instala para adicionar funcionalidades ao Express. Exemplo: `cors`.
+
+### Instalação
+
+```bash
+npm install cors
+```
+
+### Uso Básico
+
+```js
+const cors = require('cors');
+app.use(cors());
+```
+
+### Com Whitelist
+
+```js
+const whitelist = ['https://www.yoursite.com', 'http://127.0.0.1:5500', 'http://localhost:3500'];
+
+const corsOptions = {
+    origin: (origin, callback) => {
+        if (whitelist.indexOf(origin) !== -1 || !origin) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
+```
+
+---
+
+## 4. Middleware de Tratamento de Erros
+
+Este tipo de middleware possui **quatro parâmetros**: `(err, req, res, next)`, e deve ser o **último** middleware definido.
+
+### Arquivo: `middleware/errorHandler.js`
+
+```js
+const { logEvents } = require('./logEvents');
+
+const errorHandler = (err, req, res, next) => {
+    logEvents(`${err.name}: ${err.message}`, 'errLog.txt');
+    console.error(err.stack);
+    res.status(500).send(err.message);
+};
+
+module.exports = errorHandler;
+```
+
+### Uso no `server.js`
+
+```js
+const errorHandler = require('./middleware/errorHandler');
+
+// ... outras rotas
+
+app.all('*', (req, res) => {
+    res.status(404);
+    res.send('404 Not Found');
+});
+
+app.use(errorHandler); // deve ser o último
+```
+
+---
+
+Com esses exemplos, você consegue aplicar middleware de forma eficaz no seu servidor Express.js.
+
