@@ -682,3 +682,363 @@ setTimeout(() => {
 }, 2000);
 ```
 Aguarda 2 segundos e emite o evento 'log', passando a mensagem "Log event emitted!".
+
+# Aula 05
+
+
+--------------------------------------------------------------------------------
+
+1. Estrutura do Projeto
+
+Você precisará de uma estrutura de pastas para organizar seus arquivos, incluindo os arquivos que o servidor irá servir.
+
+```
+/seu-projeto
+├── node_modules/       (criada pelo npm)
+├── logs/               (para logs de requisição e erro) [1, 8, 11]
+├── data/               (para arquivos de dados, como JSON, TXT) [1]
+├── images/             (para arquivos de imagem) [1]
+├── views/              (para arquivos HTML) [1]
+│   ├── subdir/         (um subdiretório de exemplo) [3]
+│   │   └── index.html
+│   ├── 404.html        (página de erro 404) [1]
+│   ├── index.html      (página inicial) [1]
+│   └── new-page.html   (outra página de exemplo) [1]
+├── .gitignore          (para ignorar a pasta node_modules) [26]
+├── package.json        (gerenciado pelo npm) [1, 4]
+├── logEvents.js        (módulo customizado para logging) [7]
+└── server.js           (arquivo principal do servidor) [1]
+```
+
+Crie as pastas logs, data, images, views e views/subdir manualmente. Crie os arquivos package.json, logEvents.js, server.js, .gitignore, e os arquivos de exemplo dentro das pastas (index.html, 404.html, new-page.html, etc.
+
+2. Configuração Inicial e Dependências ()
+
+O arquivo package.json gerencia as informações do projeto, scripts e dependências. Você pode criá-lo usando npm init -y para aceitar os padrões.
+
+Precisamos instalar algumas dependências:
+
+• date-fns: Para formatar datas em logs.
+
+• uuid: Para gerar IDs únicos em logs.
+
+• nodemon: Uma dependência de desenvolvimento para reiniciar o servidor automaticamente ao detectar mudanças nos arquivos.
+
+No terminal, dentro da pasta do projeto:
+
+```
+npm init -y
+npm install date-fns uuid # Instala dependências de produção
+npm install nodemon -D # Instala nodemon como dependência de desenvolvimento
+```
+
+Seu package.json deve se parecer com algo assim (os números de versão podem variar):
+
+```
+{
+  "name": "seu-projeto", // Pode mudar [1]
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js", // Ponto de entrada principal [1]
+  "scripts": {
+    "start": "node server", // Script para rodar em produção [5]
+    "dev": "nodemon server" // Script para desenvolvimento [5]
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "date-fns": "^2.x.x", // Versão de date-fns [4, 5]
+    "uuid": "^8.x.x"     // Versão de uuid [6]
+  },
+  "devDependencies": {
+    "nodemon": "^2.x.x" // Versão de nodemon [5]
+  }
+}
+```
+
+Adicione node_modules/ ao seu arquivo .gitignore para não incluir a pasta no Git.
+
+```
+node_modules/
+```
+
+3. Módulo de Logging ()
+
+Este módulo será responsável por formatar e escrever entradas de log em um arquivo, além de garantir que o diretório de logs exista.
+
+```
+// logEvents.js
+const { format } = require('date-fns'); // Importa format de date-fns [7]
+const { v4: uuid } = require('uuid'); // Importa v4 de uuid como uuid [7]
+
+const fs = require('fs'); // Importa o módulo fs (síncrono para existsSync) [8, 11]
+const fsPromises = require('fs').promises; // Importa a versão com Promises do fs [8]
+const path = require('path'); // Importa o módulo path [8]
+
+// Função assíncrona para logar eventos
+const logEvents = async (message, logName) => { // Aceita a mensagem e o nome do arquivo de log [23]
+    const dateTime = `${format(new Date(), 'yyyyMMdd\tHH:mm:ss')}`; // Formata data e hora [8]
+    const logItem = `${dateTime}\t${uuid()}\t${message}\n`; // Formata a linha de log com data, ID e mensagem [8, 11]
+
+    try {
+        // Verifica se o diretório de logs existe, se não, cria [11]
+        if (!fs.existsSync(path.join(__dirname, 'logs'))) {
+            await fsPromises.mkdir(path.join(__dirname, 'logs'));
+        }
+        // Adiciona a entrada de log ao arquivo especificado [8]
+        await fsPromises.appendFile(path.join(__dirname, 'logs', logName), logItem);
+    } catch (err) {
+        console.error(err); // Loga o erro no console se não conseguir escrever no arquivo [8]
+    }
+}
+
+module.exports = logEvents; // Exporta a função logEvents [9]
+```
+
+Explicação do logEvents.js:
+
+•Importa format da biblioteca date-fns para obter a data e hora formatadas.
+
+•Importa v4 (uma função para gerar UUIDs versão 4) da biblioteca uuid e a renomeia para uuid localmente.
+
+•Importa os módulos fs (File System) e path, ambos módulos centrais do Node.js8.... A versão com Promises do fs (fsPromises) é usada para operações assíncronas com await8. A versão síncrona fs.existsSync é usada para verificar a existência do diretório11.
+
+•Define uma função assíncrona logEvents que recebe message (a mensagem do log) e logName (o nome do arquivo de log).
+
+•Dentro da função, a data e hora atuais são formatadas.
+
+• Uma string logItem é criada contendo a data/hora, um UUID único, a mensagem, e uma quebra de linha (\n) para garantir que cada log fique em uma linha separada.A string usa tabulações (\t) para separar os campos, criando um arquivo de log delimitado por tabuladores.
+
+•Um bloco try...catch é usado para lidar com erros durante as operações de arquivo.
+
+• Dentro do try, fs.existsSync verifica se o diretório logs existe no mesmo nível que o arquivo atual (__dirname representa o diretório do arquivo em execução).
+
+• Se o diretório logs não existir, fsPromises.mkdir o cria11.
+
+• fsPromises.appendFile é usado para adicionar a string logItem ao final do arquivo especificado por logName dentro do diretório logs. Se o arquivo não existir, ele será criado8.
+
+• Erros são capturados no bloco catch e logados no console8.
+
+• A função logEvents é exportada usando module.exports para que possa ser importada em outros arquivos, como o server.js.
+
+4. Arquivo Principal do Servidor ()
+
+Este é o arquivo onde o servidor HTTP é criado e a lógica para lidar com as requisições é implementada.
+
+```
+// server.js
+const http = require('http'); // Módulo central para criar servidores HTTP [3]
+const path = require('path'); // Módulo central para lidar com caminhos de arquivos [3]
+const fsPromises = require('fs').promises; // Módulo central para operações de arquivo assíncronas [3, 30]
+
+const logEvents = require('./logEvents'); // Importa o módulo de logging customizado [9]
+const EventEmitter = require('events'); // Módulo central para eventos [7, 9]
+class Emitter extends EventEmitter {}; // Cria uma classe que estende EventEmitter [9]
+const myEmitter = new Emitter(); // Cria uma instância do emitter [9]
+myEmitter.on('log', (msg, fileName) => logEvents(msg, fileName)); // Adiciona um listener para o evento 'log' [10, 23]
+
+const PORT = process.env.PORT || 3500; // Define a porta do servidor, usando variável de ambiente ou 3500 como padrão [3]
+
+// Função assíncrona para servir arquivos
+const serveFile = async (filePath, contentType, response) => { // Recebe o caminho do arquivo, tipo de conteúdo e objeto response [19]
+    try {
+        // Determina a codificação: utf-8 para texto, nulo para binário (como imagens) [22]
+        const encoding = contentType.includes('image') ? '' : 'utf8';
+        // Lê o conteúdo do arquivo [19, 30]
+        const rawData = await fsPromises.readFile(filePath, encoding);
+        // Se for JSON, analisa e converte de volta para string (opcional, demonstra parse/stringify) [21]
+        const data = contentType === 'application/json'
+            ? JSON.parse(rawData)
+            : rawData;
+
+        // Define o status code da resposta (404 para página 404, 200 caso contrário) [22]
+        const statusCode = filePath.includes('404.html') ? 404 : 200;
+
+        // Escreve o cabeçalho da resposta [19, 21, 22]
+        response.writeHead(statusCode, { 'Content-Type': contentType });
+        // Envia o conteúdo da resposta
+        // Converte de volta para string se for JSON antes de enviar [21]
+        response.end(contentType === 'application/json' ? JSON.stringify(data) : data);
+
+    } catch (err) {
+        // Captura erros durante a leitura do arquivo
+        console.error(err); // Loga o erro no console
+        myEmitter.emit('log', `${err.name}\t${err.message}`, 'errorLog.txt'); // Emite um evento de log para o arquivo de erros [23]
+        // Define status code 500 para erro interno do servidor [19]
+        response.statusCode = 500;
+        response.end(); // Encerra a resposta
+    }
+}
+
+// Cria o servidor HTTP [13]
+const server = http.createServer((req, res) => {
+    // Loga a URL e o método da requisição [13]
+    console.log(req.url, req.method);
+    // Emite um evento de log para cada requisição [23]
+    myEmitter.emit('log', `${req.url}\t${req.method}`, 'requestLog.txt');
+
+    // Obtém a extensão do arquivo solicitado [15]
+    const extension = path.extname(req.url);
+
+    // Define o tipo de conteúdo (Content-Type) com base na extensão [15]
+    let contentType;
+    switch (extension) {
+        case '.css':
+            contentType = 'text/css';
+            break;
+        case '.js':
+            contentType = 'text/javascript';
+            break;
+        case '.json':
+            contentType = 'application/json';
+            break;
+        case '.jpg':
+            contentType = 'image/jpeg';
+            break;
+        case '.png':
+            contentType = 'image/png';
+            break;
+        case '.txt':
+            contentType = 'text/plain';
+            break;
+        default:
+            contentType = 'text/html'; // Padrão para HTML [15]
+    }
+
+    // Define o caminho do arquivo a ser servido [16, 17]
+    let filePath;
+    // Lógica complexa para determinar o caminho do arquivo com base na URL e tipo de conteúdo
+    if (contentType === 'text/html' && req.url === '/') { // Se for HTML e URL raiz, serve index.html na views
+        filePath = path.join(__dirname, 'views', 'index.html');
+    } else if (contentType === 'text/html' && req.url.slice(-1) === '/') { // Se for HTML e URL termina com /, serve index.html dentro do subdiretório
+         filePath = path.join(__dirname, 'views', req.url, 'index.html');
+    } else if (contentType === 'text/html') { // Se for HTML e não for os casos acima, serve o arquivo HTML na views
+        filePath = path.join(__dirname, 'views', req.url);
+    } else { // Para outros tipos de conteúdo (CSS, imagem, JSON, etc.), usa a URL diretamente a partir do diretório base
+        filePath = path.join(__dirname, req.url);
+    }
+
+    // Torna a extensão .html opcional na URL para arquivos HTML [17]
+    if (!extension && req.url.slice(-1) !== '/') {
+        filePath = path.join(__dirname, 'views', req.url + '.html');
+    }
+
+    // Verifica se o arquivo existe [17]
+    const fileExists = fsPromises.existsSync(filePath); // existsSync é síncrono [31]
+
+    if (fileExists) {
+        // Se o arquivo existe, serve o arquivo [17]
+        serveFile(filePath, contentType, res);
+    } else {
+        // Se o arquivo não existe, lida com 404 ou redirecionamento [17]
+        switch (path.parse(filePath).base) { // Usa o nome base do arquivo para checar redirects [18]
+            case 'old-page.html': // Exemplo de redirecionamento
+                res.writeHead(301, { 'Location': '/new-page.html' }); // Status 301 e cabeçalho Location [18]
+                res.end(); // Encerra a resposta
+                break;
+            case 'www-page.html': // Outro exemplo de redirecionamento
+                 res.writeHead(301, { 'Location': '/' }); // Redireciona para a raiz [18]
+                 res.end(); // Encerra a resposta
+                 break;
+            default:
+                // Se não for um redirect conhecido, serve a página 404 [18]
+                serveFile(path.join(__dirname, 'views', '404.html'), 'text/html', res);
+        }
+    }
+});
+
+// Configura o servidor para escutar na porta especificada [13]
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`)); // Loga que o servidor iniciou [13]
+
+// Captura exceções não tratadas para evitar que o processo Node.js pare [33]
+process.on('uncaughtException', err => {
+    console.error(`There was an uncaught error: ${err.message}`); // Loga o erro no console
+    myEmitter.emit('log', `${err.name}\t${err.message}`, 'errorLog.txt'); // Emite um evento de log para o arquivo de erros [23]
+    process.exit(1); // Encerra o processo com código de erro [33]
+});
+
+```
+
+Explicação Detalhada do server.js:
+
+1. Importações:
+
+◦Importa os módulos centrais http, path e fs.promises3.
+
+◦ Importa o módulo customizado logEvents que criamos.
+
+◦ Importa o módulo events e configura um EventEmitter (myEmitter). Um listener é adicionado para o evento log, que chamará a função logEvents passando a mensagem e o nome do arquivo de log.
+
+2. Porta:
+
+◦ Define a porta do servidor. Ele tenta usar a variável de ambiente process.env.PORT (útil para hospedagem) e, se não estiver definida, usa 3500 como padrão para desenvolvimento local.
+
+3. Função serveFile:
+
+◦ Esta é uma função assíncrona reutilizável que lida com a leitura e envio de arquivos.
+
+◦ Usa try...catch para capturar erros de leitura de arquivo.
+
+◦ Determina a codificação para a leitura do arquivo: utf8 para arquivos de texto (HTML, CSS, JS, JSON, TXT) e uma string vazia para binários como imagens, para não corrompê-los.
+
+◦ fsPromises.readFile lê o conteúdo do arquivo assincronamente.
+
+◦ Um tratamento opcional para JSON é mostrado: JSON.parse após a leitura e JSON.stringify antes de enviar, embora simplesmente enviar o rawData já funcione.
+
+◦ Define o statusCode da resposta: 404 se o arquivo lido for 404.html, caso contrário 20022.
+
+◦ response.writeHead escreve os cabeçalhos da resposta, incluindo o status code e o Content-Type.
+
+◦ response.end envia o corpo da resposta e finaliza a comunicação com o cliente.
+
+◦ No catch, erros são logados no console e um evento log é emitido para ser salvo no arquivo errorLog.txt.... A resposta é encerrada com status code 50019.
+
+4. Criação do Servidor:
+
+◦ http.createServer() cria o servidor e recebe um callback que será executado para cada requisição. O callback recebe os objetos req (requisição) e res (resposta).
+
+◦ A URL (req.url) e o método HTTP (req.method) são logados no console e um evento log é emitido para o arquivo requestLog.txt.
+
+◦ path.extname(req.url) obtém a extensão do arquivo da URL.
+
+◦ Um switch é usado para determinar o contentType apropriado com base na extensão. text/html é o padrão.
+
+◦ A variável filePath é definida usando lógica condicional (operadores ternários ou if/else if) combinada com path.join(__dirname, ...) para construir o caminho completo do arquivo no sistema de arquivos. Casos específicos como a URL raiz (/) e URLs de subdiretórios (/subdir/) são tratados para apontar para o index.html correto dentro da pasta views3.... Outros tipos de arquivo usam a URL diretamente a partir do diretório base do projeto. __dirname é uma variável global do Node.js que contém o caminho do diretório do arquivo em execução.
+
+◦ Uma verificação adicional modifica filePath para adicionar .html se a URL não tiver extensão e não terminar com /, tornando a extensão .html opcional no navegador para arquivos HTML.
+
+◦ fsPromises.existsSync(filePath) verifica se o arquivo calculado existe no sistema de arquivos17.... É usado aqui de forma síncrona para decidir o fluxo do código (servir arquivo existente vs. 404/redirect).
+
+◦Se o arquivo existe: A função serveFile é chamada com o filePath, contentType e o objeto res17.
+
+◦ Se o arquivo não existe: Um switch é usado no nome base do arquivo solicitado (path.parse(filePath).base) para verificar se é uma URL antiga que precisa ser redirecionada.
+
+▪ Redirecionamento (Status 301): Se o nome base corresponder a uma URL antiga (ex: old-page.html, www-page.html), a resposta é enviada com status 301 e um cabeçalho Location indicando a nova URL18. res.end() finaliza a resposta.
+
+▪ 404 (Página Não Encontrada): Se o nome base não corresponder a um redirect conhecido, a função serveFile é chamada para servir o arquivo 404.html da pasta views18. A função serveFile lida internamente com a definição do status 404 para este caso específico.
+
+5. Listener e Erros Não Tratados:
+
+◦ server.listen(PORT, ...) inicia o servidor e faz com que ele escute as requisições na porta definida. Um callback é executado quando o servidor começa a rodar, logando uma mensagem no console.
+
+◦ process.on('uncaughtException', ...) configura um listener para capturar quaisquer exceções JavaScript que não tenham sido tratadas por blocos try...catch. Isso impede que o processo Node.js "cai" inesperadamente. O erro é logado e o processo é encerrado com um código de erro (1)33. Um evento de log também é emitido para o arquivo de erros.
+
+--------------------------------------------------------------------------------
+
+Para rodar este servidor:
+
+1. Certifique-se de ter o Node.js instalado.
+
+2. Crie a estrutura de pastas e arquivos conforme descrito. Adicione algum conteúdo de exemplo nos arquivos (index.html, 404.html, etc.).
+
+3. Abra o terminal na pasta raiz do projeto.
+
+4. Execute npm install para instalar as dependências listadas no package.json (isso criará a pasta node_modules/).
+
+5. Execute npm run dev para iniciar o servidor usando nodemon5.
+
+O servidor estará rodando em http://localhost:3500. O nodemon irá monitorar seus arquivos (server.js, logEvents.js, e os arquivos nas pastas views, data, images) e reiniciar o servidor se detectar mudanças.... Requisições serão logadas na pasta logs.
+
+Este é um exemplo funcional de um servidor web básico em Node.js construído do zero1, demonstrando como lidar manualmente com requisições, roteamento simples, tipos de conteúdo e sistema de arquivos. Frameworks como o Express.js abstraem grande parte dessa complexidade, tornando o desenvolvimento mais rápido.
+
