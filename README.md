@@ -1042,3 +1042,105 @@ O servidor estará rodando em http://localhost:3500. O nodemon irá monitorar s
 
 Este é um exemplo funcional de um servidor web básico em Node.js construído do zero1, demonstrando como lidar manualmente com requisições, roteamento simples, tipos de conteúdo e sistema de arquivos. Frameworks como o Express.js abstraem grande parte dessa complexidade, tornando o desenvolvimento mais rápido.
 
+# Aula 06
+
+# Introdução ao Express.js - Explicação do Código
+
+Este documento fornece uma explicação detalhada do código de um servidor básico utilizando o framework Express.js com Node.js.
+
+---
+
+## Código do Servidor Express.js
+
+```js
+// Imports
+const express = require('express');
+const path = require('path');
+
+// App definition
+const app = express();
+
+// Define port
+const PORT = process.env.PORT || 3500;
+
+// Define route handlers (used in the '/chain' route example)
+const functionOne = (req, res, next) => {
+    console.log('one');
+    next();
+};
+
+const functionTwo = (req, res, next) => {
+    console.log('two');
+    next();
+};
+
+const functionThree = (req, res) => {
+    console.log('three');
+    res.send('finished');
+};
+
+// Routes
+
+// Root route and index.html (with optional .html)
+app.get('^/$|/index(.html)?', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'index.html'));
+});
+
+// New page route (with optional .html)
+app.get('/new-page(.html)?', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'new-page.html'));
+});
+
+// Old page redirect (with optional .html)
+app.get('/old-page(.html)?', (req, res) => {
+    res.redirect(301, '/new-page.html');
+});
+
+// Example of chained route handlers (anonymous functions)
+app.get('/hello(.html)?', (req, res, next) => {
+    console.log('attempted to load hello.html');
+    next();
+}, (req, res) => {
+    res.send('Hello World');
+});
+
+// Example of chained route handlers (array of named functions)
+app.get('/chain(.html)?', [functionOne, functionTwo, functionThree]);
+
+// Catch-all route for 404
+app.get('/*', (req, res) => {
+    res.status(404).sendFile(path.join(__dirname, 'views', '404.html'));
+});
+
+// Start server
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+```
+
+---
+
+## Explicação Linha a Linha
+
+### 1. Importações
+- `express`: importa o framework Express.js.
+- `path`: módulo nativo do Node.js para lidar com caminhos de arquivos.
+
+### 2. Instanciação da Aplicação
+- `const app = express();`: cria uma instância da aplicação Express.
+
+### 3. Definição da Porta
+- `const PORT = process.env.PORT || 3500;`: define a porta do servidor.
+
+### 4. Handlers para Rota `/chain`
+- Funções que mostram como middleware funciona, encadeando ações com `next()`.
+
+### 5. Rotas
+- `/`, `/index.html`: envia `index.html`.
+- `/new-page.html`: envia `new-page.html`.
+- `/old-page.html`: redireciona para `/new-page.html`.
+- `/hello.html`: usa múltiplos handlers em sequência.
+- `/chain.html`: executa três funções sequenciais antes de responder.
+- `/*`: envia `404.html` para qualquer rota não tratada.
+
+### 6. Inicialização do Servidor
+- `app.listen(...)`: inicia o servidor e escuta na porta definida.
+
