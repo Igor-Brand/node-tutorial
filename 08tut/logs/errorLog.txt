@@ -1,0 +1,2 @@
+20250430	16:12:08	3d04938b-faaf-43a6-b6ff-0a41d54b31d6	Error: Not allowed by CORS
+20250506	16:07:07	95ecde7f-d540-4e92-b920-d4c8e6049380	SyntaxError: Expected double-quoted property name in JSON at position 15 (line 4 column 1)
