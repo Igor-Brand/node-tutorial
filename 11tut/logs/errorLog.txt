@@ -3,3 +3,13 @@
 20250512	17:15:55	8c436df3-f40c-4112-8710-6420fbefd0f5	Error: Cannot set headers after they are sent to the client
 20250512	17:18:21	97949277-0277-4b5c-87a4-79e0d1692e41	Error: Cannot set headers after they are sent to the client
 20250512	17:18:53	d6e44b66-d6fa-4d12-815d-0dff4face3a0	Error: Cannot set headers after they are sent to the client
+20250520	18:33:57	14b64f2e-062e-4600-b2c7-e7f163d6dffa	TypeError: usersDB.users.find is not a function
+20250520	18:34:01	52f761e6-7ee4-495b-b229-40cdca1c9d89	TypeError: usersDB.users.find is not a function
+20250520	18:34:41	6243455f-921f-4325-8f05-78adfb4f6c81	TypeError: usersDB.users.find is not a function
+20250520	18:34:51	6efdee3f-692a-460d-bce8-32b767d007e2	TypeError: usersDB.users.find is not a function
+20250520	18:37:11	b8e7014a-6961-4e86-96f7-044cd64e1617	TypeError: usersDB.users.find is not a function
+20250520	18:43:33	010841ff-59a4-4d13-b701-bb6138a358bc	TypeError: usersDB.users.find is not a function
+20250520	18:45:44	3020083e-953d-4eb7-a6f8-1f29e42b6ad2	TypeError: usersDB.users.find is not a function
+20250520	18:46:36	2b458565-0561-4bf5-95ee-f26212eb3025	TypeError: usersDB.users.find is not a function
+20250520	18:47:56	b9ade6f3-73e7-43c8-b8cb-16487a363394	TypeError: usersDB.users.find is not a function
+20250520	18:50:12	58ea1441-065d-4e5d-97ba-2357b0e3a5a6	TypeError: usersDB.users.find is not a function

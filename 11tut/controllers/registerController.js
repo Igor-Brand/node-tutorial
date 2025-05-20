@@ -20,7 +20,7 @@ const handleNewUser = async (req, res) => {
         usersDB.setUsers([...usersDB.users, newUser]);
         await fsPromises.writeFile(
             path.join(__dirname, '..', 'model', 'users.json'),
-            JSON.stringify(usersDB.users)
+            JSON.stringify(usersDB.users, null, 2) // já é array
         );
         console.log(usersDB.users);
         res.status(201).json({ 'success': `New user ${user} created!` });
